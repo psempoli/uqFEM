@@ -66,9 +66,9 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <QtCharts/QVXYModelMapper>
 using namespace QtCharts;
 #include <math.h>
-#include <QValueAxis>
+#include <QtCharts/QValueAxis>
 
-#include <QXYSeries>
+#include <QtCharts/QXYSeries>
 
 #define NUM_DIVISIONS 10
 

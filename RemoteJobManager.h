@@ -55,14 +55,14 @@ class MainWindow;
 class MainWindow;
 class QTableWidget;
 class QPushButton;
-class AgaveCurl;
+class AgaveHandler;
 
 class RemoteJobManager : public QWidget
 {
     Q_OBJECT
 public:
 
-    explicit RemoteJobManager(AgaveCurl *theInterface, MainWindow *, QWidget *parent = nullptr);
+    explicit RemoteJobManager(AgaveHandler *theInterface, MainWindow *, QWidget *parent = nullptr);
     bool addJob(QString &jobID);
     void clearTable(void);
 

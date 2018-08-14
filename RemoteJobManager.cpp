@@ -42,7 +42,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 
 #include "RemoteJobManager.h"
-#include <AgaveCurl.h>
+#include "agaveInterfaces/agavehandler.h"
 #include <QJsonDocument>
 
 #include <QHBoxLayout>
@@ -61,10 +61,9 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <QMenu>
 
 #include  <QDebug>
-#include "AgaveCurl.h"
 #include <MainWindow.h>
 
-RemoteJobManager::RemoteJobManager(AgaveCurl *theRemoteInterface, MainWindow *theMain, QWidget *parent)
+RemoteJobManager::RemoteJobManager(AgaveHandler *theRemoteInterface, MainWindow *theMain, QWidget *parent)
     : QWidget(parent), theMainWindow(theMain), triggeredRow(-1)
 {
     QVBoxLayout *layout = new QVBoxLayout();

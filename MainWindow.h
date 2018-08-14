@@ -39,6 +39,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 // Written: fmckenna
 
+#include <QObject>
 #include <QMainWindow>
 #include <QItemSelection>
 #include <QTreeView>
@@ -51,7 +52,7 @@ class InputWidgetUQ;
 class InputWidgetParameters;
 class DakotaResults;
 
-class AgaveCurl;
+class AgaveHandler;
 class RemoteJobCreator;
 class RemoteJobManager;
 class QPushButton;
@@ -59,6 +60,8 @@ class QLabel;
 class QThread;
 class QNetworkAccessManager;
 class QNetworkReply;
+
+enum class RequestState;
 
 class MainWindow : public QMainWindow
 {
@@ -71,7 +74,6 @@ class MainWindow : public QMainWindow
   QLabel *errorLabel;
 
 signals:
-    void attemptLogin(QString, QString);
     void logout();
 
   public slots:
@@ -89,7 +91,7 @@ signals:
     void onLoginButtonClicked();
     void onLoginSubmitButtonClicked();
 
-    void attemptLoginReturn(bool);
+    void attemptLoginReturn(RequestState loginReply);
     void logoutReturn(bool);
 
     void onDakotaMethodChanged(void);
@@ -123,10 +125,9 @@ signals:
     InputWidgetParameters *random;
     DakotaResults *results;
 
-    AgaveCurl *theRemoteInterface;
+    AgaveHandler *theRemoteInterface;
     RemoteJobCreator *jobCreator;
     RemoteJobManager *jobManager;
-
 
     bool loggedIn;
     QWidget *loginWindow;            // popup window for when login clicked

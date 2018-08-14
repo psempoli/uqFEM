@@ -54,8 +54,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <QDir>
 
 
-RemoteJobCreator::RemoteJobCreator(AgaveCurl *theInt, QWidget *parent)
-    : QWidget(parent), theInterface(theInt),maxParallel(1)
+RemoteJobCreator::RemoteJobCreator(AgaveHandler * theAgaveHandle, QWidget *parent)
+    : QWidget(parent), theInterface(theAgaveHandle),maxParallel(1)
 {
     QGridLayout *layout = new QGridLayout();
     QLabel *nameLabel = new QLabel();
@@ -109,17 +109,6 @@ RemoteJobCreator::RemoteJobCreator(AgaveCurl *theInt, QWidget *parent)
     //
 
     connect(pushButton,SIGNAL(clicked()), this, SLOT(pushButtonClicked()));
-
-    // on login from interface to set up homeDirPath
-    connect(theInterface,SIGNAL(loginReturn(bool)),this,SLOT(attemptLoginReturn(bool)));
-    connect(this,SIGNAL(getHomeDirCall()),theInterface,SLOT(getHomeDirPathCall()));
-    connect(theInterface,SIGNAL(getHomeDirPathReturn(QString)), this, SLOT(getHomeDirReturned(QString)));
-
-    // to start job need to connect uploadDir and start job
-    connect(this,SIGNAL(uploadDirCall(const QString &,const QString &)), theInterface, SLOT(uploadDirectoryCall(const QString &,const QString &)));
-    connect(theInterface, SIGNAL(uploadDirectoryReturn(bool)), this, SLOT(uploadDirReturn(bool)));
-    connect(this,SIGNAL(startJobCall(QJsonObject)),theInterface,SLOT(startJobCall(QJsonObject)));
-    connect(theInterface,SIGNAL(startJobReturn(QString)), this, SLOT(startJobReturn(QString)));
 }
 
 void 

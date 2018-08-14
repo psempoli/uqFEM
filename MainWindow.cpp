@@ -80,13 +80,14 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <QtNetwork/QNetworkRequest>
 #include <QHostInfo>
 
-//#include <AgaveCLI.h>
-#include <AgaveCurl.h>
 #include <RemoteJobCreator.h>
 #include <RemoteJobManager.h>
 #include <QThread>
 #include <QSettings>
 #include <QDesktopServices>
+
+#include "agaveInterfaces/agavehandler.h"
+#include "remotedatainterface.h"
 
 /*
 static
@@ -142,11 +143,13 @@ MainWindow::MainWindow(QWidget *parent)
     //
     // create the interface, jobCreator and jobManager
     //
-    QString tenant("designsafe");
-    QString storage("agave://designsafe.storage.default/");
+    QString tenant("https://agave.designsafe-ci.org");
+    QString storage("designsafe.storage.default");
+    QString client("uq-FEM-client");
 
-    //theRemoteInterface = new AgaveCLI(tenant, storage, this);
-    theRemoteInterface =  new AgaveCurl(tenant, storage);
+    manager = new QNetworkAccessManager(this);
+    theRemoteInterface =  new AgaveHandler(manager,this);
+    theRemoteInterface->setAgaveConnectionParams(tenant, client, storage);
     jobCreator = new RemoteJobCreator(theRemoteInterface);
     jobManager = new RemoteJobManager(theRemoteInterface, this);
 
@@ -283,9 +286,6 @@ MainWindow::MainWindow(QWidget *parent)
     //
 
     // error & status messages
-    connect(theRemoteInterface,SIGNAL(errorMessage(QString)), this, SLOT(errorMessage(QString)));
-    connect(theRemoteInterface,SIGNAL(statusMessage(QString)), this, SLOT(errorMessage(QString)));
-    connect(theRemoteInterface,SIGNAL(fatalMessage(QString)), this, SLOT(fatalMessage(QString)));
     connect(fem,SIGNAL(sendErrorMessage(QString)),this,SLOT(errorMessage(QString)));
     connect(random,SIGNAL(sendErrorMessage(QString)),this,SLOT(errorMessage(QString)));
     connect(results,SIGNAL(sendErrorMessage(QString)),this,SLOT(errorMessage(QString)));
@@ -296,14 +296,6 @@ MainWindow::MainWindow(QWidget *parent)
     // login
     connect(loginButton,SIGNAL(clicked(bool)),this,SLOT(onLoginButtonClicked()));
     connect(loginSubmitButton,SIGNAL(clicked(bool)),this,SLOT(onLoginSubmitButtonClicked()));
-
-    connect(this,SIGNAL(attemptLogin(QString, QString)),theRemoteInterface,SLOT(loginCall(QString, QString)));
-    connect(theRemoteInterface,SIGNAL(loginReturn(bool)),this,SLOT(attemptLoginReturn(bool)));
-
-
-    // logout
-    connect(this,SIGNAL(logout()),theRemoteInterface,SLOT(logoutCall()));
-    connect(theRemoteInterface,SIGNAL(logoutReturn(bool)),this,SLOT(logoutReturn(bool)));
 
     // connect job manager
     connect(runButton, SIGNAL(clicked(bool)),this,SLOT(onRunButtonClicked()));
@@ -330,26 +322,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->createActions();
 
     //
-    // create QThread in which the Interface will work, move interface to it,
-    // connect slots to thread to quit and invoke interface destructor & start running
-    //
-
-    thread = new QThread();
-    theRemoteInterface->moveToThread(thread);
-
-    connect(thread, SIGNAL(finished()), theRemoteInterface, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-
-    thread->start();
-
-    //
     // at startup make some URL calls to cleect tool stats
     //
-
-    manager = new QNetworkAccessManager(this);
-
-    connect(manager, SIGNAL(finished(QNetworkReply*)),
-            this, SLOT(replyFinished(QNetworkReply*)));
 
     // send get to my simple counter
     manager->get(QNetworkRequest(QUrl("http://opensees.berkeley.edu/OpenSees/developer/uqFEM/use.php")));
@@ -741,18 +715,19 @@ void MainWindow::onLoginSubmitButtonClicked() {
         if (password.size() == 0)
             password = "no_password";
 
-        emit attemptLogin(login, password);
+        RemoteDataReply * loginReply = theRemoteInterface->performAuth(login,password);
+        QObject::connect(loginReply, SIGNAL(haveAuthReply(RequestState)), this, SLOT(attemptLoginReturn(RequestState)));
         return;
     }
 }
 
 
 void
-MainWindow::attemptLoginReturn(bool ok){
+MainWindow::attemptLoginReturn(RequestState loginReply){
 
     int maxNumTries = 3;
 
-    if (ok == true) {
+    if (loginReply == RequestState::GOOD) {
   //      emit updateJobTable("");
         loginWindow->hide();
         loggedIn = true;

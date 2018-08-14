@@ -41,6 +41,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <QFile>
 #include <QTime>
 #include <QTextStream>
+#include <QLoggingCategory>
 
  // customMessgaeOutput code from web:
  // https://stackoverflow.com/questions/4954140/how-to-redirect-qdebug-qwarning-qcritical-etc-output
@@ -48,6 +49,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 const QString logFilePath = "debug.log";
 bool logToFile = false;
 
+/*
 void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     QHash<QtMsgType, QString> msgLevelHash({{QtDebugMsg, "Debug"}, {QtInfoMsg, "Info"}, {QtWarningMsg, "Warning"}, {QtCriticalMsg, "Critical"}, {QtFatalMsg, "Fatal"}});
@@ -73,7 +75,22 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     if (type == QtFatalMsg)
         abort();
 }
+*/
 
+void debugCategoryFilter(QLoggingCategory *category)
+{
+    if (qstrcmp(category->categoryName(), "Remote Interface") == 0)
+    {
+        category->setEnabled(QtDebugMsg, true);
+        return;
+    }
+    if (qstrcmp(category->categoryName(), "default") == 0)
+    {
+        category->setEnabled(QtDebugMsg, true);
+        return;
+    }
+    category->setEnabled(QtDebugMsg, false);
+}
 
 int main(int argc, char *argv[])
 {
@@ -90,7 +107,8 @@ int main(int argc, char *argv[])
   if (envVar.isEmpty())
     logToFile = true;
   
-  qInstallMessageHandler(customMessageOutput);
+  //qInstallMessageHandler(customMessageOutput);
+  QLoggingCategory::installFilter(debugCategoryFilter);
 
   // window scaling for mac
   //qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
